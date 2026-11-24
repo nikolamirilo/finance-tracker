@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<style>
+  * { box-sizing: border-box; }
+  body { font: 14px/1.45 'Google Sans', Roboto, Arial, sans-serif; color: #1f1f1f; margin: 0; padding: 4px 4px 16px; }
+  h2 { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
+  p { margin: 0 0 10px; color: #444746; }
+  label { display: block; font-size: 12px; color: #444746; margin: 10px 0 4px; }
+  input { width: 100%; padding: 8px 10px; border: 1px solid #c4c7c5; border-radius: 8px; font: inherit; }
+  input:focus { outline: 2px solid #0b57d0; border-color: transparent; }
+  .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  button { font: inherit; font-weight: 500; border-radius: 18px; padding: 8px 16px; border: 1px solid #c4c7c5; background: #fff; color: #0b57d0; cursor: pointer; }
+  button.primary { background: #0b57d0; color: #fff; border-color: #0b57d0; }
+  button:disabled { opacity: .5; cursor: default; }
+  .qr { display: flex; justify-content: center; margin: 14px 0 6px; min-height: 40px; }
+  .qr svg, .qr img { width: 220px; height: 220px; }
+  .msg { font-size: 12px; color: #146c2e; min-height: 18px; margin-top: 6px; }
+  .err { color: #b3261e; }
+  .muted { font-size: 12px; color: #5f6368; }
+  hr { border: 0; border-top: 1px solid #e3e3e3; margin: 16px 0; }
+  ol { padding-left: 18px; margin: 0 0 8px; color: #444746; }
+  li { margin-bottom: 4px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+</head>
+<body>
+  <h2>1. Addresses</h2>
+  <label for="api">Web app URL (Deploy &gt; Manage deployments, ends with /exec)</label>
+  <input id="api" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+  <label for="app">Phone app address (where the app is hosted)</label>
+  <input id="app" placeholder="https://your-finance-app.vercel.app" autocomplete="off">
+  <div class="row"><button class="primary" id="save">Save and show code</button></div>
+  <div class="msg" id="msg"></div>
+
+  <hr>
+  <h2>2. Scan with your phone</h2>
+  <ol>
+    <li>Point your phone camera at the code and open the link.</li>
+    <li>Add the page to your Home Screen (iPhone: Share, then Add to Home Screen).</li>
+    <li>If the installed app asks to connect again, paste the link into it.</li>
+  </ol>
+  <div class="qr" id="qr"><span class="muted">Save both addresses to see the code.</span></div>
+  <div class="row">
+    <button id="copy" disabled>Copy link</button>
+    <button id="rotate">Make a new key</button>
+  </div>
+  <p class="muted" style="margin-top:10px">The link holds a secret key. Anyone with it can read and add transactions, so don't share it. "Make a new key" disconnects every phone that used the old one.</p>
+
+<script>
+  var info = null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function b64url(s) {
+    return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function link() {
+    if (!info || !info.apiUrl || !info.appUrl) return '';
+    var base = info.appUrl.replace(/\/+$/, '') + '/';
+    return base + '#connect=' + b64url(JSON.stringify({ u: info.apiUrl, k: info.key }));
+  }
+  function show(i) {
+    info = i;
+    $('api').value = i.apiUrl || '';
+    $('app').value = i.appUrl || '';
+    var l = link();
+    $('copy').disabled = !l;
+    if (!l) { $('qr').innerHTML = '<span class="muted">Save both addresses to see the code.</span>'; return; }
+    var qr = qrcode(0, 'M');
+    qr.addData(l);
+    qr.make();
+    $('qr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+  }
+  function say(t, bad) { $('msg').textContent = t; $('msg').className = 'msg' + (bad ? ' err' : ''); }
+  function fail(e) { say(e && e.message ? e.message : String(e), true); }
+
+  $('save').onclick = function () {
+    say('Saving…');
+    google.script.run.withSuccessHandler(function (i) { show(i); say('Saved.'); }).withFailureHandler(fail)
+      .saveConnectInfo({ apiUrl: $('api').value, appUrl: $('app').value });
+  };
+  $('copy').onclick = function () {
+    var l = link();
+    var done = function () { say('Link copied.'); };
+    if (navigator.clipboard) navigator.clipboard.writeText(l).then(done, function () { prompt('Copy this link:', l); });
+    else prompt('Copy this link:', l);
+  };
+  $('rotate').onclick = function () {
+    if (!confirm('Make a new key? Phones connected with the old key will need to scan again.')) return;
+    google.script.run.withSuccessHandler(function (i) { show(i); say('New key made. Scan the code again on your phone.'); }).withFailureHandler(fail).rotateApiKey();
+  };
+  google.script.run.withSuccessHandler(show).withFailureHandler(fail).getConnectInfo();
+</script>
+</body>
+</html>
