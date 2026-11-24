@@ -245,21 +245,17 @@ html.kb .sheet{padding-bottom:12px}
 </style>
 </head>
 <body>
-<!-- Brand mark (rising bars, a trend line and a coin) and the card's chart decoration. -->
+<!-- Brand mark (rising bars and a trend line) and the card's chart decoration. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <linearGradient id="mk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A5FE6"/><stop offset="1" stop-color="#2733A6"/></linearGradient>
-    <linearGradient id="mk-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".5" stop-color="#F5B83D"/><stop offset="1" stop-color="#D98A1E"/></linearGradient>
     <linearGradient id="dc-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
     <mask id="dc-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="90"><rect width="360" height="90" fill="url(#dc-fade)"/></mask>
     <symbol id="mk" viewBox="0 0 200 200">
       <rect width="200" height="200" rx="46" fill="url(#mk-bg)"/>
-      <g transform="translate(-6 8)">
+      <g transform="translate(100 100) scale(1.2) translate(-93 -105)">
         <g fill="#fff"><rect x="46" y="124" width="26" height="32" rx="7" opacity=".42"/><rect x="83" y="108" width="26" height="48" rx="7" opacity=".62"/><rect x="120" y="90" width="26" height="66" rx="7" opacity=".82"/></g>
         <path d="M44 104l38-28 28 14 32-32" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="150" cy="50" r="22" fill="url(#mk-gold)"/>
-        <circle cx="150" cy="50" r="15" fill="none" stroke="#B9731A" stroke-opacity=".5" stroke-width="2.5"/>
-        <path d="M142 41a12 12 0 0 1 9-4" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
       </g>
     </symbol>
     <symbol id="dc" viewBox="0 0 360 90" preserveAspectRatio="none">
