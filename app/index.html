@@ -83,11 +83,13 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 /* the banknote */
 .note{position:relative;margin:0 16px;padding:20px 20px 18px;background:var(--sheet);border-radius:20px;overflow:hidden;box-shadow:var(--shadow);border:1px solid color-mix(in srgb,var(--accent) 24%,transparent)}
 .note::before{content:"";position:absolute;inset:6px;border:1px solid color-mix(in srgb,var(--accent) 13%,transparent);border-radius:15px;pointer-events:none}
-.note .rosette{position:absolute;right:-78px;top:-74px;width:270px;height:270px;color:var(--accent);opacity:.2;pointer-events:none}
-.note>*:not(.rosette){position:relative}
-.note-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.note .deco{position:absolute;left:0;right:0;bottom:0;width:100%;height:84px;color:var(--accent);pointer-events:none}
+.note>*:not(.deco){position:relative}
+.note-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .note-label{font-size:14px;color:var(--ink-2)}
+.note-mark{display:flex;align-items:center;gap:10px}
 .serial{font:italic 400 14px var(--f-display);color:var(--accent);letter-spacing:.03em;white-space:nowrap}
+.emblem{width:34px;height:34px;flex:none;border-radius:9px;box-shadow:0 6px 14px -6px color-mix(in srgb,var(--accent) 70%,transparent)}
 .note-amount{display:flex;align-items:baseline;gap:8px;margin:6px 0 14px;flex-wrap:wrap}
 .big{font:600 46px/1 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums}
 .cur{font:500 15px var(--f-ui);color:var(--ink-2)}
@@ -179,8 +181,9 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .layer.open{pointer-events:auto}
 .scrim{position:absolute;inset:0;background:rgba(8,14,22,.4);opacity:0;transition:opacity .22s}
 .layer.open .scrim{opacity:1}
-.sheet{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--sheet);border-radius:22px 22px 0 0;padding:8px 16px calc(14px + env(safe-area-inset-bottom));max-height:96dvh;overflow:auto;transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);box-shadow:0 -10px 40px -20px rgba(0,0,0,.4)}
+.sheet{position:absolute;left:0;right:0;bottom:var(--kb,0px);max-width:560px;margin:0 auto;background:var(--sheet);border-radius:22px 22px 0 0;padding:8px 16px calc(14px + env(safe-area-inset-bottom));max-height:calc(var(--vvh,100dvh) * .96);overflow:auto;overscroll-behavior:contain;transform:translateY(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1),bottom .18s ease-out;box-shadow:0 -10px 40px -20px rgba(0,0,0,.4)}
 .layer.open .sheet{transform:none}
+html.kb .sheet{padding-bottom:12px}
 .grab{width:38px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto 6px}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:44px}
 .sheet-head h2{font:600 20px var(--f-display)}
@@ -189,9 +192,13 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .typerow::-webkit-scrollbar{display:none}
 .pill{flex:none;height:32px;padding:0 13px;border-radius:999px;font-size:13px;font-weight:500;color:var(--ink-2);border:1px solid var(--rule)}
 .pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-.amount{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:16px 0 12px}
-.amount .big{font-size:50px}
-.amount .big.empty{color:var(--ink-3)}
+.amount{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:14px 0 14px;cursor:text}
+.amt-box{display:inline-grid;min-width:0;max-width:calc(100% - 56px);border-bottom:2px solid var(--rule);transition:border-color .15s}
+.amount:focus-within .amt-box{border-color:var(--accent)}
+.amt-box::after,.amt-box input{grid-area:1/1;font:600 50px/1.15 var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums;padding:0 4px}
+.amt-box::after{content:attr(data-v) ' ';visibility:hidden;white-space:pre;overflow:hidden}
+.amt-box input{width:100%;min-width:0;border:0;border-radius:0;background:transparent;outline:0;text-align:center;color:var(--ink);caret-color:var(--accent);-webkit-appearance:none;appearance:none}
+.amt-box input::placeholder{color:var(--ink-3);opacity:1}
 .catgrid{display:flex;flex-wrap:wrap;gap:6px;max-height:118px;overflow:auto;padding:2px 1px}
 .cchip{height:34px;padding:0 12px 0 10px;border-radius:999px;border:1px solid var(--rule);font-size:14px;display:inline-flex;align-items:center;gap:7px;background:var(--sheet)}
 .cchip[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:var(--paper);font-weight:500}
@@ -205,10 +212,6 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .opt svg{width:18px;height:18px}
 .opt input{position:absolute;inset:0;opacity:0;width:100%;height:100%;border:0}
 .opt[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
-.key{height:50px;border-radius:12px;font:500 23px var(--f-display);background:var(--paper);display:grid;place-items:center}
-.key:active{background:var(--rule)}
-.key.fn{font:500 15px var(--f-ui);color:var(--ink-2)}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;margin-top:10px}
 .btn:disabled{background:var(--rule-2);color:var(--ink-3)}
 .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
@@ -224,7 +227,7 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 
 /* setup */
 .setup{max-width:460px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 40px) 24px 40px}
-.setup .rosette{width:96px;height:96px;color:var(--accent);margin-bottom:18px}
+.setup .logo{display:block;width:76px;height:76px;margin-bottom:22px;border-radius:19px;box-shadow:0 18px 34px -16px color-mix(in srgb,var(--accent) 85%,transparent)}
 .setup h1{font:600 34px/1.1 var(--f-display);letter-spacing:-.01em;margin-bottom:8px}
 .setup p{color:var(--ink-2);margin-bottom:16px}
 .setup ol{padding-left:20px;color:var(--ink-2);margin-bottom:16px;display:grid;gap:6px}
@@ -242,6 +245,29 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 </style>
 </head>
 <body>
+<!-- Brand mark (rising bars, a trend line and a coin) and the card's chart decoration. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="mk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A5FE6"/><stop offset="1" stop-color="#2733A6"/></linearGradient>
+    <linearGradient id="mk-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".5" stop-color="#F5B83D"/><stop offset="1" stop-color="#D98A1E"/></linearGradient>
+    <linearGradient id="dc-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="dc-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="90"><rect width="360" height="90" fill="url(#dc-fade)"/></mask>
+    <symbol id="mk" viewBox="0 0 200 200">
+      <rect width="200" height="200" rx="46" fill="url(#mk-bg)"/>
+      <g transform="translate(-6 8)">
+        <g fill="#fff"><rect x="46" y="124" width="26" height="32" rx="7" opacity=".42"/><rect x="83" y="108" width="26" height="48" rx="7" opacity=".62"/><rect x="120" y="90" width="26" height="66" rx="7" opacity=".82"/></g>
+        <path d="M44 104l38-28 28 14 32-32" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="150" cy="50" r="22" fill="url(#mk-gold)"/>
+        <circle cx="150" cy="50" r="15" fill="none" stroke="#B9731A" stroke-opacity=".5" stroke-width="2.5"/>
+        <path d="M142 41a12 12 0 0 1 9-4" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+      </g>
+    </symbol>
+    <symbol id="dc" viewBox="0 0 360 90" preserveAspectRatio="none">
+      <path d="M0 78C34 76 58 62 92 64S150 52 184 50S246 34 282 30S334 12 360 6V90H0Z" fill="currentColor" fill-opacity=".09" mask="url(#dc-mask)"/>
+      <path d="M0 78C34 76 58 62 92 64S150 52 184 50S246 34 282 30S334 12 360 6" fill="none" stroke="currentColor" stroke-opacity=".16" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    </symbol>
+  </defs>
+</svg>
 <div id="app" class="app" aria-live="polite"></div>
 <nav class="nav" id="nav" hidden aria-label="Main"></nav>
 <div class="layer" id="layer"><div class="scrim" data-act="close"></div><section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></section></div>
@@ -299,28 +325,13 @@ const IC = {
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".6"/><circle cx="4.5" cy="12" r=".6"/><circle cx="4.5" cy="18" r=".6"/>',
   search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
   cal: '<rect x="4" y="5.5" width="16" height="14" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/>',
-  repeat: '<path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5l3 3"/>',
-  back: '<path d="M20 12H5M11 6l-6 6 6 6"/>'
+  repeat: '<path d="M4 11V9.5A3.5 3.5 0 0 1 7.5 6H19l-3-3M20 13v1.5a3.5 3.5 0 0 1-3.5 3.5H5l3 3"/>'
 };
 const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
 
-/* Guilloche rosette, the pattern on every banknote. */
-function rosette(cls) {
-  const rings = [[60, 21, 33, 0], [60, 22, 26, .5], [60, 21, 18, 1]];
-  let d = '';
-  for (const [R, r, dd, rot] of rings) {
-    const k = (R - r) / r;
-    const steps = 1400;
-    for (let i = 0; i <= steps; i++) {
-      const t = (i / steps) * Math.PI * 2 * r;
-      const x = (R - r) * Math.cos(t + rot) + dd * Math.cos(k * t + rot);
-      const y = (R - r) * Math.sin(t + rot) - dd * Math.sin(k * t + rot);
-      d += (i ? 'L' : 'M') + (100 + x).toFixed(2) + ' ' + (100 + y).toFixed(2);
-    }
-  }
-  return `<svg class="${cls}" viewBox="0 0 200 200" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width=".55"/><circle cx="100" cy="100" r="93" fill="none" stroke="currentColor" stroke-width=".55"/><circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" stroke-width=".35"/></svg>`;
-}
-let ROSETTE = '';
+/* Brand mark and the card's chart decoration, both drawn from the sprite at the top of <body>. */
+const mark = cls => `<svg class="${cls}" viewBox="0 0 200 200" aria-hidden="true"><use href="#mk"/></svg>`;
+const DECO = '<svg class="deco" viewBox="0 0 360 90" preserveAspectRatio="none" aria-hidden="true"><use href="#dc"/></svg>';
 
 /* ============================================================ calculations
    Same rules as the sheet's Dashboard:
@@ -618,6 +629,7 @@ function installBanner() {
 }
 
 function serial() { const [y, m] = S.ym.split('-'); return `Nº ${m}/${y}`; }
+const noteMark = () => `<span class="note-mark"><span class="serial">${serial()}</span>${mark('emblem')}</span>`;
 const isCurrent = () => S.ym === ymOf(todayStr());
 
 function paceInsight(pred, label) {
@@ -646,8 +658,8 @@ function viewPersonal() {
   const extra = [p.invested ? `Invested ${fmt(p.invested)} RSD.` : '', p.debt ? `Paid off ${fmt(p.debt)} RSD of debt.` : ''].filter(Boolean).join(' ');
   return `
   <section class="note" aria-label="This month">
-    ${ROSETTE}
-    <div class="note-top"><span class="note-label">Spent in ${ymMonth(S.ym)}</span><span class="serial">${serial()}</span></div>
+    ${DECO}
+    <div class="note-top"><span class="note-label">Spent in ${ymMonth(S.ym)}</span>${noteMark()}</div>
     <div class="note-amount"><span class="big">${fmt(p.spent)}</span><span class="cur">RSD</span></div>
     <div class="meter${over ? ' over' : ''}" role="img" aria-label="${esc(cap)}"><span style="width:${share == null ? 0 : Math.min(100, share * 100).toFixed(1)}%"></span></div>
     <p class="meter-cap">${cap}</p>
@@ -669,8 +681,8 @@ function viewBusiness() {
   const bal = Calc.balance(TX, S.ym);
   return `
   <section class="note" aria-label="Business this month">
-    ${ROSETTE}
-    <div class="note-top"><span class="note-label">Business balance</span><span class="serial">${serial()}</span></div>
+    ${DECO}
+    <div class="note-top"><span class="note-label">Business balance</span>${noteMark()}</div>
     <div class="note-amount"><span class="big">${fmt(bal)}</span><span class="cur">RSD</span></div>
     <p class="meter-cap">${b.kept === 0 ? `No change in ${ymMonth(S.ym)}` : `${b.kept > 0 ? 'Grew' : 'Fell'} by <b class="${b.kept > 0 ? 'pos' : 'neg'}">${fmt(Math.abs(b.kept))} RSD</b> in ${ymMonth(S.ym)}`}${b.margin != null ? `, margin ${pct(b.margin)}` : ''}</p>
     <dl class="stats four">
@@ -807,7 +819,7 @@ function viewActivity() {
 /* ---------- setup */
 function viewSetup(err = '', busy = false) {
   return `<div class="setup">
-    ${rosette('rosette')}
+    ${mark('logo')}
     <h1>Finance</h1>
     <p>Log expenses in seconds and see where your money goes. Everything is saved to your Finance Tracker sheet.</p>
     <ol>
@@ -957,6 +969,7 @@ function openSheet(html, st) {
   setTimeout(() => (sh.querySelector('[autofocus]') || sh.querySelector('button')).focus({ preventScroll: true }), 50);
 }
 function closeSheet() {
+  if ($('#sheet').contains(document.activeElement)) document.activeElement.blur();
   $('#layer').classList.remove('open');
   document.body.style.overflow = '';
   sheetState = null;
@@ -977,10 +990,49 @@ function typesFor(account) {
   const order = ['Expense', 'Income', 'Transfer', 'Investment', 'Debt payoff'];
   return order.filter(t => Object.values(CATS).some(c => c.a === account && c.t === t));
 }
+/* The amount and description fields are built once per sheet and never redrawn,
+   so the phone's own keyboard stays open while the rest of the sheet updates. */
+const MAX_DIGITS = 11;
 function openAdd(prefill) {
   const st = Object.assign({ account: S.account, type: 'Expense', amount: '', category: null, note: '', date: todayStr(), repeat: false }, prefill || {});
-  openSheet('<div id="add"></div>', { kind: 'add', st });
+  const amt = st.amount ? fmt(+st.amount) : '';
+  openSheet(`
+    <div class="sheet-head">
+      <div class="seg" id="a-acc" role="tablist" aria-label="Account"></div>
+      <button class="icon-btn" data-act="close" aria-label="Close">${icon('close')}</button>
+    </div>
+    <h2 id="sheet-title" class="sr">Add transaction</h2>
+    <div class="typerow" id="a-types" role="group" aria-label="Type"></div>
+    <label class="amount"><span class="amt-box" data-v="${amt || '0'}"><input id="a-amt" type="text" size="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" placeholder="0" value="${amt}" aria-label="Amount in RSD"${amt ? '' : ' autofocus'}></span><span class="cur">RSD</span></label>
+    <div class="catgrid" id="a-cats" role="group" aria-label="Category"></div>
+    <input class="note-in" id="a-note" placeholder="Description (optional)" value="${esc(st.note)}" maxlength="200" enterkeyhint="done" aria-label="Description">
+    <div class="sugs" id="a-sugs"></div>
+    <div class="opts" id="a-opts"></div>
+    <button class="btn" id="a-save" data-act="a-save"></button>`, { kind: 'add', st });
+  $('#a-amt').addEventListener('input', onAmountInput);
+  $('#a-note').addEventListener('input', e => { st.note = e.target.value; });
   paintAdd();
+  // Focus inside the tap that opened the sheet: iOS only shows the keyboard then.
+  if (!amt) $('#a-amt').focus({ preventScroll: true });
+}
+function onAmountInput(e) {
+  const el = e.target, st = sheetState.st;
+  const before = el.value.slice(0, el.selectionStart ?? el.value.length).replace(/\D/g, '').length;
+  const digits = el.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, MAX_DIGITS);
+  const text = digits ? fmt(+digits) : '';
+  st.amount = digits;
+  el.value = text;
+  el.parentNode.dataset.v = text || '0';
+  // Keep the cursor after the same digit it was after, despite the added commas.
+  let pos = 0;
+  for (let seen = 0; pos < text.length && seen < Math.min(before, digits.length); pos++) if (/\d/.test(text[pos])) seen++;
+  if (document.activeElement === el) el.setSelectionRange(pos, pos);
+  paintSave();
+}
+function paintSave() {
+  const st = sheetState.st, amt = +st.amount || 0, b = $('#a-save');
+  b.disabled = !(amt && st.category);
+  b.textContent = !amt ? 'Enter an amount' : !st.category ? 'Pick a category' : `Save ${fmt(amt)} RSD`;
 }
 function paintAdd() {
   const st = sheetState.st;
@@ -988,34 +1040,16 @@ function paintAdd() {
   if (!types.includes(st.type)) st.type = types[0] || 'Expense';
   const cats = catsFor(st.account, st.type);
   if (st.category && !cats.some(c => c.n === st.category)) st.category = null;
-  const amt = +st.amount || 0;
   const sugs = st.category ? topNotes(st.account, st.type, st.category) : [];
-  const saveLabel = !amt ? 'Enter an amount' : !st.category ? 'Pick a category' : `Save ${fmt(amt)} RSD`;
-  const dateTxt = dayLabel(st.date);
-  $('#add').innerHTML = `
-    <div class="sheet-head">
-      <div class="seg" role="tablist" aria-label="Account">${['Personal', 'Business'].map(a => `<button role="tab" data-act="a-acc" data-acc="${a}" aria-selected="${st.account === a}">${a}</button>`).join('')}</div>
-      <button class="icon-btn" data-act="close" aria-label="Close">${icon('close')}</button>
-    </div>
-    <h2 id="sheet-title" class="sr">Add transaction</h2>
-    <div class="typerow" role="group" aria-label="Type">${types.map(t => `<button class="pill" data-act="a-type" data-type="${t}" aria-pressed="${st.type === t}">${t}</button>`).join('')}</div>
-    <div class="amount" aria-live="polite"><span class="big ${amt ? '' : 'empty'}">${amt ? fmt(amt) : '0'}</span><span class="cur">RSD</span></div>
-    <div class="catgrid" role="group" aria-label="Category">${cats.map(c => `<button class="cchip" data-act="a-cat" data-cat="${esc(c.n)}" aria-pressed="${st.category === c.n}"><i class="dot" style="background:${c.color}"></i>${esc(c.n)}</button>`).join('') || '<p class="empty">No categories for this type. Add one in the sheet’s Categories tab.</p>'}</div>
-    <input class="note-in" id="a-note" placeholder="Description (optional)" value="${esc(st.note)}" maxlength="200" enterkeyhint="done" aria-label="Description">
-    <div class="sugs">${sugs.map(s => `<button class="sug" data-act="a-sug" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div>
-    <div class="opts">
-      <label class="opt">${icon('cal')}<span>${dateTxt}</span><input type="date" id="a-date" value="${st.date}" max="${todayStr()}" aria-label="Date"></label>
-      <button class="opt" data-act="a-repeat" aria-pressed="${st.repeat}">${icon('repeat')}Repeat monthly</button>
-    </div>
-    <div class="keys" role="group" aria-label="Amount keypad">
-      ${['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(k => `<button class="key" data-act="k" data-k="${k}">${k}</button>`).join('')}
-      <button class="key fn" data-act="k" data-k="000">000</button>
-      <button class="key" data-act="k" data-k="0">0</button>
-      <button class="key fn" data-act="k" data-k="del" aria-label="Delete digit">${icon('back')}</button>
-    </div>
-    <button class="btn" data-act="a-save" ${amt && st.category ? '' : 'disabled'}>${saveLabel}</button>`;
-  $('#a-note').addEventListener('input', e => { st.note = e.target.value; });
+  $('#a-acc').innerHTML = ['Personal', 'Business'].map(a => `<button role="tab" data-act="a-acc" data-acc="${a}" aria-selected="${st.account === a}">${a}</button>`).join('');
+  $('#a-types').innerHTML = types.map(t => `<button class="pill" data-act="a-type" data-type="${t}" aria-pressed="${st.type === t}">${t}</button>`).join('');
+  $('#a-cats').innerHTML = cats.map(c => `<button class="cchip" data-act="a-cat" data-cat="${esc(c.n)}" aria-pressed="${st.category === c.n}"><i class="dot" style="background:${c.color}"></i>${esc(c.n)}</button>`).join('') || '<p class="empty">No categories for this type. Add one in the sheet’s Categories tab.</p>';
+  $('#a-sugs').innerHTML = sugs.map(s => `<button class="sug" data-act="a-sug" data-v="${esc(s)}">${esc(s)}</button>`).join('');
+  $('#a-opts').innerHTML = `
+    <label class="opt">${icon('cal')}<span>${dayLabel(st.date)}</span><input type="date" id="a-date" value="${st.date}" max="${todayStr()}" aria-label="Date"></label>
+    <button class="opt" data-act="a-repeat" aria-pressed="${st.repeat}">${icon('repeat')}Repeat monthly</button>`;
   $('#a-date').addEventListener('change', e => { if (e.target.value) { st.date = e.target.value; paintAdd(); } });
+  paintSave();
 }
 function topNotes(account, type, cat) {
   const c = {};
@@ -1103,17 +1137,13 @@ document.addEventListener('click', async e => {
     // add sheet
     case 'a-acc': st.account = b.dataset.acc; st.category = null; paintAdd(); break;
     case 'a-type': st.type = b.dataset.type; st.category = null; paintAdd(); break;
-    case 'a-cat': st.category = b.dataset.cat; paintAdd(); break;
-    case 'a-sug': st.note = b.dataset.v; paintAdd(); break;
-    case 'a-repeat': st.repeat = !st.repeat; paintAdd(); break;
-    case 'k': {
-      const k = b.dataset.k;
-      if (k === 'del') st.amount = st.amount.slice(0, -1);
-      else if (k === '000') { if (st.amount) st.amount = (st.amount + '000').slice(0, 11); }
-      else if (!(k === '0' && !st.amount)) st.amount = (st.amount + k).slice(0, 11);
-      if (navigator.vibrate) navigator.vibrate(5);
+    case 'a-cat':
+      st.category = b.dataset.cat;
+      // Amount typed and category picked: put the keyboard away so Save is in view.
+      if (+st.amount && document.activeElement?.id === 'a-amt') document.activeElement.blur();
       paintAdd(); break;
-    }
+    case 'a-sug': st.note = b.dataset.v; $('#a-note').value = st.note; break;
+    case 'a-repeat': st.repeat = !st.repeat; paintAdd(); break;
     case 'a-save': {
       const amt = +st.amount;
       if (!amt || !st.category) break;
@@ -1166,12 +1196,26 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && sheetState) closeSheet();
-  if (sheetState?.kind === 'add' && document.activeElement?.id !== 'a-note') {
-    if (/^[0-9]$/.test(e.key)) $(`[data-k="${e.key}"]`)?.click();
-    else if (e.key === 'Backspace') $('[data-k="del"]')?.click();
-    else if (e.key === 'Enter') $('[data-act="a-save"]')?.click();
+  // Enter (the keyboard's Done key) saves when the form is complete, otherwise just closes the keyboard.
+  if (e.key === 'Enter' && sheetState?.kind === 'add' && ['a-amt', 'a-note'].includes(e.target.id)) {
+    e.preventDefault();
+    const save = $('#a-save');
+    if (save && !save.disabled) save.click(); else e.target.blur();
   }
 });
+
+/* Keep bottom sheets above the on-screen keyboard (iOS and Android overlay it on the page). */
+const vv = window.visualViewport;
+function fitViewport() {
+  if (!vv) return;
+  const zoomed = vv.scale > 1.01;
+  const kb = zoomed ? 0 : Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  const root = document.documentElement;
+  root.style.setProperty('--kb', kb + 'px');
+  root.style.setProperty('--vvh', (zoomed ? window.innerHeight : vv.height) + 'px');
+  root.classList.toggle('kb', kb > 80);
+}
+if (vv) { vv.addEventListener('resize', fitViewport); vv.addEventListener('scroll', fitViewport); }
 
 async function doConnect(cfg, link) {
   $('#app').innerHTML = viewSetup('', true);
@@ -1266,7 +1310,6 @@ let rz;
 window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawCharts, 150); });
 
 (function boot() {
-  ROSETTE = rosette('rosette');
   const fromHash = parseConnect(location.hash);
   const link = fromHash ? location.href : '';
   if (location.hash.includes('connect=')) history.replaceState(null, '', location.pathname + location.search);
