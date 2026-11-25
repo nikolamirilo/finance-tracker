@@ -1,7 +1,7 @@
 /* Finance PWA service worker: the app shell and fonts come from cache, so the app
    opens instantly and works offline. Calls to the Google Apps Script API always go
    to the network (the app keeps its own offline queue). */
-const VERSION = 'finance-v2';
+const VERSION = 'finance-v3';
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',

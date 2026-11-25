@@ -13,7 +13,7 @@ phone (PWA)  --POST JSON + secret key-->  Apps Script web app (Api.gs)  -->  Tra
 |---|---|
 | `app/index.html` | The whole app (UI, charts, offline queue, demo mode) |
 | `app/sw.js`, `app/manifest.webmanifest`, `app/icons/`, `app/fonts/` | PWA shell: installable, opens instantly, works offline. Fonts are self-hosted |
-| `apps-script/Api.gs` | The API, already added to the sheet's script project |
+| `apps-script/Api.gs` | The API, already added to the sheet's script project. Also runs the month-end macro when you close a month in the app |
 | `apps-script/ConnectPhone.html` | The "Finance > Connect phone app" dialog (QR code), already added |
 
 Code.gs changed in two places: the old `doGet` (it served the sidebar) was removed, because `doGet`/`doPost` now live in Api.gs, and the Finance menu got a "Connect phone app" item.
@@ -35,5 +35,9 @@ Want to see it first? Open the hosted app with `?demo=1`, or tap "Try it with sa
 - **After changing the script, redeploy.** A web app deployment runs a frozen version. After any change to Code.gs or Api.gs: Deploy > Manage deployments > edit (pencil) > Version: **New version** > Deploy. The URL stays the same.
 - **Security.** The `/exec` URL is public, but every request needs the 64-character key stored in Script Properties (`FT_API_KEY`). Without it the API only returns an error. "Make a new key" in the dialog disconnects all phones.
 - **Same rules as the Dashboard.** Personal income includes Owner payout transfers; business balance is everything kept in the business up to that month. Adds go through the existing `addTransaction()`, so validation, sorting and "Repeat monthly" (Recurring tab) behave exactly like the sidebar. Opening the app also posts due recurring items, like the sidebar does.
+- **Closing a month.** When a month has ended, the Overview shows a reminder ("October is over…") and a **Close month** button under the month name. Closing shows that month's numbers, sends any transactions still waiting on the phone, then runs your month-end macro in the sheet. Closed months show "Closed 2 Nov"; tap it to run the close again (for example after adding a late transaction). The app remembers closed months in Script Properties (`FT_CLOSED_MONTHS`).
+  - **Point it at your macro.** In Api.gs, set `CLOSE_MONTH_MACRO` to your macro's function name (default `closeMonth`), then deploy a new version. It's called as `yourMacro(monthStart, ym)`: the first day of the month as a Date, and the same month as text (`"2026-10"`). A macro that takes no arguments works too.
+  - **No dialogs.** The macro runs from the web app, without the sheet open, so it can't use `SpreadsheetApp.getUi()` (alerts, prompts, dialogs). `ss.toast()` is fine. If it needs a dialog, the app shows an error and you close that month from the sheet.
+  - **Time limit.** Apps Script stops any run at 6 minutes. The app waits that long and shows "Closing…" meanwhile.
 - **Offline.** Transactions you add offline wait on the phone ("waiting to sync") and are sent when you're back online. Each one carries an id, so a retry never adds it twice.
 - **Updating the app.** Change the files and redeploy the host. Bump `VERSION` in `app/sw.js` so phones pick up the new version on the next launch.
