@@ -5,6 +5,7 @@
  *   action "data"   -> categories + all transactions
  *   action "add"    -> adds one transaction (same rules as the sidebar), returns fresh data
  *   action "delete" -> deletes one transaction row, returns fresh data
+ *   action "close"  -> runs the month-end macro for one month, returns fresh data
  *
  * Deploy > New deployment > Web app: Execute as "Me", Who has access "Anyone".
  * Every request must carry the secret key from Finance > Connect phone app.
@@ -14,6 +15,19 @@
 var API_KEY_PROP = 'FT_API_KEY';
 var API_URL_PROP = 'FT_API_URL';
 var APP_URL_PROP = 'FT_APP_URL';
+var CLOSED_PROP = 'FT_CLOSED_MONTHS';
+
+/**
+ * The month-end macro that the app's "Close month" button runs.
+ * Set this to the name of your function (in Code.gs or any file of this script project).
+ * It is called as   yourMacro(monthStart, ym)
+ *   monthStart  Date, the first day of the month being closed
+ *   ym          the same month as text, e.g. "2026-10"
+ * A macro that takes no arguments works too: it just ignores them.
+ * It runs from the web app, without the spreadsheet open, so it can't show
+ * dialogs, alerts or prompts (SpreadsheetApp.getUi()).
+ */
+var CLOSE_MONTH_MACRO = 'closeMonth';
 
 function doGet() {
   return json_({ ok: true, app: 'finance-tracker-api', hint: 'The phone app talks to this URL with POST requests.' });
@@ -31,6 +45,7 @@ function doPost(e) {
     if (req.action === 'data') return json_(apiData_(false));
     if (req.action === 'add') return json_(apiAdd_(req));
     if (req.action === 'delete') return json_(apiDelete_(req));
+    if (req.action === 'close') return json_(apiClose_(req));
     return json_({ ok: false, error: 'Unknown action.' });
   } catch (err) {
     return json_({ ok: false, error: String((err && err.message) || err), auth: !!(err && err.auth) });
@@ -74,6 +89,7 @@ function apiData_(skipRecurring) {
     accounts: ACCOUNTS,
     categories: cats,
     tx: tx,
+    closed: closedMonths_(),
     at: Date.now()
   };
 }
@@ -154,6 +170,49 @@ function apiDelete_(req) {
   return apiData_(true);
 }
 
+/** Runs the month-end macro for req.month ("yyyy-MM") and records when that month was closed. */
+function apiClose_(req) {
+  var ym = String(req.month || '');
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(ym)) throw new Error('Pick a month to close.');
+  var year = Number(ym.slice(0, 4)), month = Number(ym.slice(5, 7));
+  var label = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+    'September', 'October', 'November', 'December'][month - 1] + ' ' + year;
+  var tz = SpreadsheetApp.getActive().getSpreadsheetTimeZone();
+  if (ym >= Utilities.formatDate(new Date(), tz, 'yyyy-MM')) throw new Error(label + ' hasn’t ended yet.');
+
+  var macro = globalThis[CLOSE_MONTH_MACRO];
+  if (typeof macro !== 'function') {
+    throw new Error('The sheet has no function called ' + CLOSE_MONTH_MACRO + '(). In Api.gs, set CLOSE_MONTH_MACRO to the name of your month-end macro, then deploy a new version.');
+  }
+
+  // A second tap (or a retry after a dropped connection) must not run the macro
+  // while the first run is still going.
+  var cache = CacheService.getScriptCache();
+  var running = cache.get('ftclosing');
+  if (running) throw new Error('The month-end macro is already running for ' + running + '. Wait a minute, then tap Sync.');
+  cache.put('ftclosing', label, 360);
+  try {
+    macro(new Date(year, month - 1, 1), ym);
+    SpreadsheetApp.flush();
+  } catch (err) {
+    var msg = String((err && err.message) || err);
+    if (/getUi/.test(msg)) {
+      msg = 'it tries to open a dialog or alert, which can’t run from the phone. Take the dialog out of the macro, or close this month from the sheet. (' + msg + ')';
+    }
+    throw new Error('The month-end macro stopped: ' + msg);
+  } finally {
+    cache.remove('ftclosing');
+  }
+
+  var closed = closedMonths_();
+  closed[ym] = Date.now();
+  PropertiesService.getScriptProperties().setProperty(CLOSED_PROP, JSON.stringify(closed));
+
+  var data = apiData_(true);
+  data.closedMonth = ym;
+  return data;
+}
+
 /* ------------------------------------------------------------------ connect dialog */
 
 function showConnectPhone() {
@@ -210,6 +269,16 @@ function apiCategoryNames_() {
   var last = lastRowInCol_(sh, 1);
   if (last < 2) return [];
   return sh.getRange(2, 1, last - 1, 1).getValues().map(function (r) { return String(r[0]); }).filter(String);
+}
+
+/** { "yyyy-MM": closed-at ms } for every month closed from the app. */
+function closedMonths_() {
+  try {
+    var o = JSON.parse(PropertiesService.getScriptProperties().getProperty(CLOSED_PROP) || '{}');
+    return o && typeof o === 'object' ? o : {};
+  } catch (e) {
+    return {};
+  }
 }
 
 function newApiKey_() {
